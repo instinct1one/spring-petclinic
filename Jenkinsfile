@@ -6,7 +6,7 @@ node('OPENJDK-11') {
         sh 'mvn package'
     }
     stage("archive results") {
-        junit '**/surefire-results/*.xml'
+        junit '**/surefire-reports/*.xml'
     }
     stage("clean") {
         cleanWs cleanWhenAborted: false, cleanWhenFailure: false, cleanWhenNotBuilt: false, cleanWhenUnstable: false
