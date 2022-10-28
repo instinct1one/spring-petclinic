@@ -1,14 +1,40 @@
-node('OPENJDK-11') {
-    stage('vcs') {
-      git branch: 'main', url: 'https://github.com/instinct1one/spring-petclinic.git'
+pipeline {
+    agent {label 'n'}
+    stages {
+        stage ('SOUREODE') {
+            steps {
+               git url: 'https://github.com/instinct1one/spring-petclinic.git',
+                branch: 'main'
+            }
+        }
+        stage ('ARTIFATORY_CONFIG') {
+            steps {
+				rtMavenDeployer (
+                    id: "MAVEN_DEPLOYER",
+                    serverId:     "JFROG",
+                    releaseRepo:  "default-libs-release-local",
+                    snapshotRepo: "default-libs-snapshot-local",
+                    deployArtifacts : true
+                )
+            }
+        }
+        stage ('MAVEN') {
+            steps {
+                rtMavenRun (
+                    pom:   "pom.xml",
+                    tool: "MVN",
+                    goals: "clean install",
+                    deployerId: "MAVEN_DEPLOYER",
+                )
+            }
+        }
+        stage ('BUILD_INFO') {
+            steps {
+                rtPublishBuildInfo (
+                    serverId: "JFROG"
+                )
+            }
+        }
     }
-    stage("build") {
-        sh 'mvn package'
-    }
-    stage("archive results") {
-        junit '**/surefire-reports/*.xml'
-    }
-    stage("clean") {
-        cleanWs cleanWhenAborted: false, cleanWhenFailure: false, cleanWhenNotBuilt: false, cleanWhenUnstable: false
-    }
+	
 }
